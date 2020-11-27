@@ -18,16 +18,23 @@ const CharactersInfo = new GraphQLObjectType({
 })
 
 const CharacterThumbnail = new GraphQLObjectType({
-    name: 'thumbnailPath',
+    name: 'characterthumbnail',
     fields: () => ({
         path: { type: GraphQLString },
         extension: { type: GraphQLString }
     })
 })
 
+const ThumbnailPath = new GraphQLObjectType({
+    name: 'thumbnailPath',
+    fields: () => ({
+        img: { type: GraphQLString },
+    })
+})
+
 let date = Date.now();
 let hash = md5(`${date}783118be80cb2e11218c8e853c0eb7762a590ca484c5e1a66da9e1c3ff93d7782ffff98e`);
-let authorization = `?ts=${date}&apikey=84c5e1a66da9e1c3ff93d7782ffff98e&hash=${hash}`;
+let authorization = `ts=${date}&apikey=84c5e1a66da9e1c3ff93d7782ffff98e&hash=${hash}`;
 
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
@@ -35,7 +42,7 @@ const RootQuery = new GraphQLObjectType({
         characters: {
             type: new GraphQLList(CharactersInfo),
             resolve(parent, args) {
-                return axios.get(`https://gateway.marvel.com:443/v1/public/characters${authorization}`)
+                return axios.get(`https://gateway.marvel.com:443/v1/public/characters?${authorization}`)
                     .then(res => res.data.data.results);
             }
         },
@@ -45,7 +52,17 @@ const RootQuery = new GraphQLObjectType({
                 id: { type: GraphQLInt }
             },
             resolve(parent, args) {
-                return axios.get(`https://gateway.marvel.com:443/v1/public/characters/${args.id}${authorization}`)
+                return axios.get(`https://gateway.marvel.com:443/v1/public/characters/${args.id}?${authorization}`)
+                    .then(res => res.data.data.results);
+            }
+        },
+        character_pagination: {
+            type: new GraphQLList(CharactersInfo),
+            args: {
+                startswith: { type: GraphQLString }
+            },
+            resolve(parent, args) {
+                return axios.get(`https://gateway.marvel.com:443/v1/public/characters?nameStartsWith=${args.startswith}&limit=100&${authorization}`)
                     .then(res => res.data.data.results);
             }
         }
